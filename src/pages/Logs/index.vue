@@ -1,127 +1,95 @@
 <template>
   <DashboardLayout>
-  <v-container>
-    <v-card>
-      <v-card-title>
-        Logs
-        <!-- <v-spacer></v-spacer>
-        <v-btn icon @click="fetchLogs">
-          <v-icon>mdi-refresh</v-icon>
-        </v-btn> -->
-      </v-card-title>
-
-      <!-- Filter Input -->
-      <v-row>
-        <v-col cols="12" md="6">
-          <v-text-field
-            v-model="search"
-            label="Search by details"
-            @input="onFilterChange"
-            clearable
-            outlined
-            dense
-            prepend-inner-icon="mdi-magnify"
-          />
-        </v-col>
-      </v-row>
-
-      <!-- Data Table -->
-      <v-data-table
-        :headers="headers"
-        :items="logs"
-        :loading="loading"
-        :server-items-length="total"
-        v-model:options="options"
-        item-value="_id"
-        class="elevation-1"
-      >
-        <template v-slot:top>
-          <v-toolbar flat>
-            <v-toolbar-title>Log Details</v-toolbar-title>
-            <v-spacer></v-spacer>
-          </v-toolbar>
-        </template>
-
-        <template v-slot:body="{ items }">
-          <tbody>
-            <tr v-for="(item, index) in items" :key="item._id">
-              <td>{{ (options.page - 1) * options.itemsPerPage + index + 1 }}</td>
-              <td>{{ item.created_at }}</td>
-              <td>{{ item.event }}</td>
-              <td>{{ item.details }}</td>
+    <v-container>
+      <v-card>
+        <v-card-title>Logs</v-card-title>
+        <v-data-table-server
+          v-model:items-per-page="options.itemsPerPage"
+          v-model:page="options.page"
+          :headers="headers"
+          :items="logs"
+          :items-length="total"
+          :loading="loading"
+          item-value="_id"
+          @update:options="loadItems"
+        >
+          <!-- Footer untuk Filter -->
+          <template v-slot:tfoot>
+            <tr>
               <td>
-                <v-chip :color="getEventColor(item.event)" dark>
-                  {{ item.event }}
-                </v-chip>
+                <v-text-field
+                  v-model="filters.name"
+                  class="ma-2"
+                  density="compact"
+                  placeholder="Search name..."
+                  hide-details
+                  @input="onFilterChange"
+                />
               </td>
             </tr>
-          </tbody>
-        </template>
-      </v-data-table>
+          </template>
 
-      <!-- Pagination -->
-      <v-row justify="space-between" align="center" class="mt-3">
-        <v-btn
-          :disabled="options.page <= 1"
-          @click="onPreviousPage"
-          outlined
-          small
-        >
-          <v-icon left>mdi-chevron-left</v-icon> Previous
-        </v-btn>
-        <div>Page {{ options.page }} of {{ totalPages }}</div>
-        <v-btn
-          :disabled="options.page >= totalPages"
-          @click="onNextPage"
-          outlined
-          small
-        >
-          Next <v-icon right>mdi-chevron-right</v-icon>
-        </v-btn>
-      </v-row>
-    </v-card>
-  </v-container>
-</DashboardLayout>
+          <!-- Custom Slot untuk Kolom -->
+          <template v-slot:[`item.giver`]="{ item }">
+            <div>{{ item.giver.name }} ({{ item.giver.identifier }})</div>
+          </template>
+
+          <template v-slot:[`item.receiver`]="{ item }">
+            <div>{{ item.receiver.name }} ({{ item.receiver.identifier }})</div>
+          </template>
+
+          <template v-slot:[`item.item`]="{ item }">
+            <div>{{ item.item.name }} x{{ item.item.quantity }}</div>
+          </template>
+        </v-data-table-server>
+      </v-card>
+    </v-container>
+  </DashboardLayout>
 </template>
 
 <script>
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
-import { ref, watch, computed } from "vue";
-import { api } from "@/utils/api"; // Handler Axios yang sudah dibuat
+import { ref, watch, onMounted } from "vue";
+import { api } from "@/utils/api";
 
 export default {
   components: {
     DashboardLayout,
   },
   setup() {
-    const logs = ref([]);
-    const loading = ref(false);
-    const total = ref(0);
-    const options = ref({ page: 1, itemsPerPage: 10 });
-    const search = ref("");
-    const totalPages = computed(() => Math.ceil(total.value / options.value.itemsPerPage));
+    const logs = ref([]); // Data logs
+    const total = ref(0); // Total logs
+    const loading = ref(false); // State loading
+    const options = ref({ page: 1, itemsPerPage: 10 }); // Pagination options
+    const filters = ref({ name: "", event: "" }); // Filters untuk footer
 
+    // Headers untuk data table
     const headers = ref([
-      { text: "No", value: "index", sortable: false },
-      { text: "Created At", value: "created_at" },
-      { text: "Event", value: "event" },
-      { text: "Details", value: "details" },
-      { text: "Tag", value: "tags" },
+      { title: "Time", value: "created_at", sortable: true },
+      { title: "Event", value: "event", sortable: true },
+      { title: "Giver", value: "giver", sortable: false },
+      { title: "Receiver", value: "receiver", sortable: false },
+      { title: "Item", value: "item", sortable: false },
     ]);
 
-    // Fungsi fetch logs
-    const fetchLogs = async () => {
+    // Fetch logs
+    const loadItems = async () => {
       loading.value = true;
       try {
-        const response = await api.get("/inventory", {
-          params: {
-            page: options.value.page,
-            limit: options.value.itemsPerPage,
-            search: search.value || undefined, // Tambahkan filter search jika ada
-          },
-        });
-        console.log('Headers sent:', response.config.headers); // Debugging
-        console.log('Response:', response.data);
+        // Gabungkan filter ke dalam parameter `param`
+        const param = [filters.value.name, filters.value.event]
+          .filter(Boolean) // Hapus nilai kosong
+          .join(" "); // Gabungkan dengan spasi
+
+        const params = {
+          page: options.value.page,
+          limit: options.value.itemsPerPage,
+          param: param || undefined, // Kirim `param` jika ada
+        };
+
+        console.log("Params sent to API:", params); // Debugging params
+        const response = await api.get("/inventory", { params });
+
         logs.value = response.data.data;
         total.value = response.data.total;
       } catch (error) {
@@ -131,55 +99,29 @@ export default {
       }
     };
 
-    // Watcher untuk options (paginasi)
-    watch(options, fetchLogs, { immediate: true });
-
-    // Fungsi untuk warna event
-    const getEventColor = (event) => {
-      switch (event) {
-        case "addItem":
-          return "green";
-        case "removeItem":
-          return "red";
-        case "giveItem":
-          return "blue";
-        default:
-          return "grey";
-      }
-    };
-
-    // Fungsi untuk filter
+    // Perubahan pada filter atau pagination memicu data baru
     const onFilterChange = () => {
-      options.value.page = 1; // Reset ke halaman pertama saat filter berubah
-      fetchLogs();
+      options.value.page = 1; // Reset ke halaman pertama
+      loadItems();
     };
 
-    // Navigasi halaman
-    const onNextPage = () => {
-      if (options.value.page < totalPages.value) {
-        options.value.page++;
-      }
-    };
+    // Watcher untuk perubahan pagination
+    watch(options, loadItems, { immediate: true });
 
-    const onPreviousPage = () => {
-      if (options.value.page > 1) {
-        options.value.page--;
-      }
-    };
+    // Mounted lifecycle
+    onMounted(() => {
+      loadItems(); // Fetch pertama kali
+    });
 
     return {
       logs,
-      loading,
       total,
+      loading,
       options,
+      filters,
       headers,
-      search,
-      totalPages,
-      fetchLogs,
-      getEventColor,
+      loadItems,
       onFilterChange,
-      onNextPage,
-      onPreviousPage,
     };
   },
 };
@@ -190,7 +132,7 @@ export default {
   margin-top: 16px;
 }
 
-.v-chip {
+.v-card-title {
   font-weight: bold;
 }
 </style>

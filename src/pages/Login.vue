@@ -20,6 +20,7 @@ export default {
     const userAbilityRulesStorage = useLocalStorage('vrealms-dash-admin-userAbilityRules');
     const userRoleCookie = useCookie('vrealms-dash-admin-userRole');
     const accessTokenCookie = useCookie('vrealms-dash-admin-accessToken');
+    const refreshTokenCookie = useCookie('vrealms-dash-admin-refreshToken');
     const userIdCookie = useCookie('vrealms-dash-admin-userId');
 
     const mapPrivilegesToAbilityRules = (privileges) => {
@@ -70,11 +71,13 @@ export default {
         // Simpan token di cookie dengan opsi rememberMe
         if (rememberMe.value) {
           accessTokenCookie.value = accessToken;
+          refreshTokenCookie.value = refreshToken;
           accessTokenCookie.options = { maxAge: 60 * 60 * 24 * 30 }; // 1 bulan
           userIdCookie.value = _id;
           userIdCookie.options = { maxAge: 60 * 60 * 24 * 30 }; // 1 bulan
         } else {
           accessTokenCookie.value = accessToken;
+          refreshTokenCookie.value = refreshToken;
           userIdCookie.value = _id;
         }
 
