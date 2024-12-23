@@ -20,6 +20,14 @@ const menuItems = [
     to: { name: 'dashboard-Logs' },
     icon: { icon: 'mdi-file-document' },
   },
+  {
+    heading: 'Image',
+  },
+  {
+    title: 'Image',
+    to: { name: 'dashboard-Image' },
+    icon: { icon: 'mdi-image-check-outline' },
+  },
 ];
 
 export default menuItems;
