@@ -59,17 +59,30 @@
       <v-card>
         <v-card-title>Image Details</v-card-title>
         <v-card-text>
-          <v-row>
+          <v-img
+            v-if="selectedImage?._link?.href"
+            :src="selectedImage._link.href"
+            max-height="400px"
+            contain
+          ></v-img>
+          <p v-else>Image not available</p>
+          <v-row v-if="selectedImage">
             <v-col cols="12" md="6">
               <v-img :src="selectedImage._link?.href" max-height="400px" contain></v-img>
             </v-col>
             <v-col cols="12" md="6">
-              <p><strong>Name:</strong> {{ selectedImage.name }}</p>
-              <p><strong>Description:</strong> {{ selectedImage.description }}</p>
-              <p><strong>Type:</strong> {{ selectedImage.type }}</p>
-              <p><strong>Uploader:</strong> {{ selectedImage.uploaderDetails?.firstname }} {{ selectedImage.uploaderDetails?.lastname }}</p>
-              <p><strong>Created At:</strong> {{ selectedImage.created_at }}</p>
+              <p><strong>Name:</strong> {{ selectedImage.name || 'N/A' }}</p>
+              <p><strong>Description:</strong> {{ selectedImage.description || 'N/A' }}</p>
+              <p><strong>Type:</strong> {{ selectedImage.type || 'N/A' }}</p>
+              <p><strong>Uploader:</strong>
+                {{ selectedImage.uploaderDetails?.firstname || 'Unknown' }}
+                {{ selectedImage.uploaderDetails?.lastname || 'User' }}
+              </p>
+              <p><strong>Created At:</strong> {{ selectedImage.created_at || 'N/A' }}</p>
             </v-col>
+          </v-row>
+          <v-row v-else>
+            <p>Loading details...</p>
           </v-row>
         </v-card-text>
         <v-card-actions>
@@ -176,18 +189,21 @@ export default {
     };
 
     const showImageDetail = async (detailUrl) => {
-      console.log(detailUrl)
       try {
+        console.log("Fetching detail from:", detailUrl);
         const response = await api.get(detailUrl);
-        console.log(response.data)
         if (response.status === 200 && response.data) {
-          selectedImage.value = response.data;
+          console.log("Detail fetched:", response.data);
+          selectedImage.value = response.data.data; // Pastikan ini sesuai dengan struktur respons API
           detailDialog.value = true;
+        } else {
+          console.warn("Unexpected response for details:", response);
         }
       } catch (error) {
-        console.error('Error fetching image detail:', error);
+        console.error("Error fetching image detail:", error);
       }
     };
+
 
     const uploadImages = async () => {
       try {
@@ -222,6 +238,7 @@ export default {
 
     const fetchUploaderDetails = async (url) => {
       try {
+        console.log("Fetching uploader details from:", url);
         const response = await api.get(url);
         if (response.status === 200 && response.data) {
           return response.data.data;
@@ -229,7 +246,7 @@ export default {
       } catch (error) {
         console.error("Error fetching uploader details:", error);
       }
-      return { firstname: "Unknown", lastname: "User" };
+      return { firstname: "Unknown", lastname: "User" }; // Default jika gagal
     };
 
     const closeUploadDialog = () => {
