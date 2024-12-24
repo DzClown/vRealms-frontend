@@ -1,8 +1,8 @@
 <template>
   <DashboardLayout>
     <v-container>
+      <v-card-title class="text-h4 mb-5">Logs</v-card-title>
       <v-card>
-        <v-card-title>Logs</v-card-title>
         <v-data-table-server
           v-model:items-per-page="options.itemsPerPage"
           v-model:page="options.page"
