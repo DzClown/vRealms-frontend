@@ -7,7 +7,7 @@
       <template v-slot:activator="{ props }">
         <v-btn v-bind="props" text>
           <v-avatar size="32">
-            <img :src="avatarUrl" alt="User Avatar" />
+            <v-img :src="avatarUrl" alt="User Avatar" />
           </v-avatar>
           <span class="ml-2">Halo, {{ username }}</span>
         </v-btn>

@@ -18,7 +18,7 @@
         >
         <!-- Name with clickable detail -->
         <template v-slot:[`item.name`]="{ item }">
-            <v-btn text @click="showImageDetail(item.detail.href)">
+            <v-btn color="primary" @click="showImageDetail(item.detail.href)">
               {{ item.name }}
             </v-btn>
           </template>
@@ -60,16 +60,15 @@
         <v-card-title>Image Details</v-card-title>
         <v-card-text>
           <v-img
-            v-if="selectedImage?._link?.href"
-            :src="selectedImage._link.href"
-            max-height="400px"
-            contain
+            v-if="selectedImage?.type && selectedImage?.name"
+            :src="imagelink(selectedImage.type, selectedImage.name)"
+            max-height="500px"
           ></v-img>
           <p v-else>Image not available</p>
           <v-row v-if="selectedImage">
-            <v-col cols="12" md="6">
-              <v-img :src="selectedImage._link?.href" max-height="400px" contain></v-img>
-            </v-col>
+            <!-- <v-col cols="12" md="6">
+              <v-img :src="imagelink(selectedImage.type,selectedImage.name)" max-height="400px" contain></v-img>
+            </v-col> -->
             <v-col cols="12" md="6">
               <p><strong>Name:</strong> {{ selectedImage.name || 'N/A' }}</p>
               <p><strong>Description:</strong> {{ selectedImage.description || 'N/A' }}</p>
@@ -154,7 +153,6 @@ export default {
 
     const headers = ref([
       { title: 'Name', value: 'name' },
-      { title: 'Description', value: 'description' },
       { title: 'Type', value: 'type' },
       { title: 'Uploader', value: 'uploader' },
       { title: 'Created At', value: 'created_at' },
@@ -188,12 +186,17 @@ export default {
       }
     };
 
+    const imagelink = (type, imageName) => {
+      return `https://api-service.vrealmscity.com:26920/api/v1/image/${type}/${imageName}`;
+    };
+
     const showImageDetail = async (detailUrl) => {
       try {
         console.log("Fetching detail from:", detailUrl);
         const response = await api.get(detailUrl);
         if (response.status === 200 && response.data) {
           console.log("Detail fetched:", response.data);
+          console.log(response.data.data.name)
           selectedImage.value = response.data.data; // Pastikan ini sesuai dengan struktur respons API
           detailDialog.value = true;
         } else {
@@ -240,6 +243,8 @@ export default {
       try {
         console.log("Fetching uploader details from:", url);
         const response = await api.get(url);
+        const dataImage = response.data
+        // console.log(dataImage.name)
         if (response.status === 200 && response.data) {
           return response.data.data;
         }
@@ -295,6 +300,7 @@ export default {
       closeUploadDialog,
       showImageDetail,
       onFilterChange,
+      imagelink,
     };
   },
 };

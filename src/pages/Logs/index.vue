@@ -38,6 +38,10 @@
             <div>{{ item.receiver.name }} ({{ item.receiver.identifier }})</div>
           </template>
 
+          <template v-slot:[`item.event`]="{ item }">
+            <v-chip :color="getEventColor(item.event)" dark>{{ item.event }}</v-chip>
+          </template>
+
           <template v-slot:[`item.item`]="{ item }">
             <div>{{ item.item.name }} x{{ item.item.quantity }}</div>
           </template>
@@ -99,6 +103,19 @@ export default {
       }
     };
 
+    const getEventColor = (event) => {
+      switch (event) {
+        case "addItem":
+          return "green";
+        case "removeItem":
+          return "red";
+        case "giveItem":
+          return "blue";
+        default:
+          return "grey";
+      }
+    };
+
     // Perubahan pada filter atau pagination memicu data baru
     const onFilterChange = () => {
       options.value.page = 1; // Reset ke halaman pertama
@@ -122,6 +139,7 @@ export default {
       headers,
       loadItems,
       onFilterChange,
+      getEventColor,
     };
   },
 };

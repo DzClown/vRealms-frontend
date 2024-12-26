@@ -28,6 +28,14 @@ const menuItems = [
     to: { name: 'dashboard-Image' },
     icon: { icon: 'mdi-image-check-outline' },
   },
+  {
+    heading: 'Players',
+  },
+  {
+    title: 'Players',
+    to: { name: 'dashboard-Players' },
+    icon: { icon: 'mdi-human-male-board' },
+  },
 ];
 
 export default menuItems;

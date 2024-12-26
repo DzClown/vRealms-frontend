@@ -2,7 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
   {
-    path: '/',
+    path: '/login',
     name: 'Login',
     component: () => import('@/pages/Login.vue'), // Halaman login
   },
@@ -25,6 +25,12 @@ const routes = [
     path: '/images/:id',
     name: 'dashboard-Image-id',
     component: () => import('@/pages/Image/[id].vue'),
+    props: true,
+  },
+  {
+    path: '/players',
+    name: 'dashboard-Players',
+    component: () => import('@/pages/Players/index.vue'),
     props: true,
   },
 ];
