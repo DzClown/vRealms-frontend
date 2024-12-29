@@ -20,6 +20,8 @@
     "destr": "^2.0.3",
     "dotenv": "^16.4.7",
     "roboto-fontface": "*",
+    "sass-loader": "^16.0.4",
+    "sweetalert2": "^11.15.3",
     "vue": "^3.4.31",
     "vuetify": "^3.6.14"
   },

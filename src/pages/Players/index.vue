@@ -13,10 +13,6 @@
           item-value="identifier"
           @update:options="loadPlayers"
         >
-          <!-- Avatar
-          <template v-slot:[`item.avatar`]="{ item }">
-            <v-img :src="item.avatar.href" max-height="50" max-width="50" class="mr-2"></v-img>
-          </template> -->
 
           <!-- Full Name -->
           <template v-slot:[`item.fullname`]="{ item }">
@@ -27,6 +23,18 @@
             >
               {{ item.firstname }} {{ item.lastname }}
             </v-btn>
+          </template>
+
+          <!-- Phone Number -->
+          <template v-slot:[`item.phone`]="{ item }">
+            <span v-if="item.phone_info.length > 0">
+              <ul>
+                <li v-for="(phone, index) in item.phone_info" :key="index">
+                  {{ phone.phone_number }}
+                </li>
+              </ul>
+            </span>
+            <span v-else><h4>Not Available</h4></span>
           </template>
 
           <!-- Accounts -->
@@ -41,6 +49,16 @@
           <!-- Job and Grade -->
           <template v-slot:[`item.job`]="{ item }">
             <span>{{ item.job_label }} ({{ item.grade_label }})</span>
+          </template>
+
+          <!-- Edit Button -->
+          <template v-slot:[`item.actions`]="{ item }">
+            <v-btn icon @click="showEditDialog(item)">
+              <v-icon>mdi-clipboard-edit-outline</v-icon>
+            </v-btn>
+            <v-btn icon @click="showChangePhoneDialog(item)">
+              <v-icon>mdi-cellphone</v-icon>
+            </v-btn>
           </template>
 
           <!-- Footer for Search -->
@@ -62,42 +80,205 @@
       </v-card>
     </v-container>
 
-    <!-- Modal for Player Detail -->
-    <v-dialog v-model="detailDialog" max-width="600px">
+    <!-- Modal for Edit Name -->
+    <v-dialog v-model="editDialog" max-width="500px">
       <v-card>
-        <v-card-title>Player Details</v-card-title>
+        <v-card-title>
+          <span class="text-h5">Edit Player Name</span>
+        </v-card-title>
         <v-card-text>
-          <v-img
-            v-if="selectedPlayer.avatar"
-            :src="selectedPlayer.avatar.href"
-            max-height="200px"
-            contain
-          ></v-img>
-          <div>
-            <p><strong>Full Name:</strong> {{ selectedPlayer.firstname }} {{ selectedPlayer.lastname }}</p>
-            <p><strong>Identifier:</strong> {{ selectedPlayer.identifier }}</p>
-            <p><strong>Date of Birth:</strong> {{ selectedPlayer.dateofbirth }}</p>
-            <p><strong>Gender:</strong> {{ selectedPlayer.sex === "f" ? "Female" : "Male" }}</p>
-            <p><strong>Height:</strong> {{ selectedPlayer.height }} cm</p>
-            <p><strong>Accounts:</strong></p>
-            <ul>
-              <li>Money: {{ selectedPlayer.accounts?.money }}</li>
-              <li>Bank: {{ selectedPlayer.accounts?.bank }}</li>
-              <li>Black Money: {{ selectedPlayer.accounts?.black_money }}</li>
-            </ul>
-            <p><strong>Job:</strong> {{ selectedPlayer.job_label }} ({{ selectedPlayer.grade_label }})</p>
-          </div>
+          <v-container>
+            <v-row>
+              <!-- Identifier (Disabled) -->
+              <v-col cols="12">
+                <v-text-field
+                  label="Identifier"
+                  v-model="editData.identifier"
+                  outlined
+                  dense
+                  disabled
+                ></v-text-field>
+              </v-col>
+
+              <!-- First Name -->
+              <v-col cols="12" md="6">
+                <v-text-field
+                  label="First Name"
+                  v-model="editData.firstname"
+                  outlined
+                  dense
+                ></v-text-field>
+              </v-col>
+
+              <!-- Last Name -->
+              <v-col cols="12" md="6">
+                <v-text-field
+                  label="Last Name"
+                  v-model="editData.lastname"
+                  outlined
+                  dense
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
         </v-card-text>
         <v-card-actions>
-          <v-btn text @click="detailDialog = false">Close</v-btn>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="updatePlayerName">Save</v-btn>
+          <v-btn text @click="editDialog = false">Cancel</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Modal for Player Detail -->
+    <v-dialog v-model="detailDialog" max-width="800px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Player Details</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <!-- Avatar -->
+            <v-row justify="center">
+              <v-col cols="12" md="6" class="text-center">
+                <v-img
+                  v-if="selectedPlayer.avatar"
+                  :src="selectedPlayer.avatar.href"
+                  max-height="400px"
+                  max-width="400px"
+                  contain
+                ></v-img>
+              </v-col>
+            </v-row>
+
+            <!-- Basic Info -->
+            <v-row>
+              <v-col cols="12" md="6">
+                <p><strong>Full Name:</strong> {{ selectedPlayer.firstname }} {{ selectedPlayer.lastname }}</p>
+                <p><strong>Identifier:</strong> {{ selectedPlayer.identifier }}</p>
+                <p><strong>Date of Birth:</strong> {{ selectedPlayer.dateofbirth }}</p>
+                <p><strong>Gender:</strong> {{ selectedPlayer.sex === "f" ? "Female" : "Male" }}</p>
+                <p><strong>Height:</strong> {{ selectedPlayer.height }} cm</p>
+              </v-col>
+
+              <!-- Job Info -->
+              <v-col cols="12" md="6">
+                <p><strong>Job:</strong></p>
+                <p>{{ selectedPlayer.job_label }} ({{ selectedPlayer.grade_label }})</p>
+              </v-col>
+            </v-row>
+
+            <!-- Accounts Info -->
+            <v-row>
+              <v-col cols="12">
+                <v-card outlined>
+                  <v-card-title>
+                    <span class="text-h6">Accounts</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <ul>
+                      <li><strong>Money:</strong> {{ selectedPlayer.accounts?.money }}</li>
+                      <li><strong>Bank:</strong> {{ selectedPlayer.accounts?.bank }}</li>
+                      <li><strong>Black Money:</strong> {{ selectedPlayer.accounts?.black_money }}</li>
+                    </ul>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <!-- Phone Info -->
+            <v-row>
+              <v-col cols="12">
+                <v-card outlined>
+                  <v-card-title>
+                    <span class="text-h6">Phone Info</span>
+                  </v-card-title>
+                  <v-card-text>
+                    <v-row v-for="(phone, index) in selectedPlayer.phone_info" :key="index" class="mb-3">
+                      <v-col cols="12" md="6">
+                        <p><strong>Phone Number:</strong> {{ phone.phone_number }}</p>
+                        <p><strong>Model:</strong> {{ phone.model === "md" ? "Android" : "Iphone" }}</p>
+                      </v-col>
+                      <v-col cols="12" md="6">
+                        <p><strong>Email:</strong> {{ phone.mail }}</p>
+                        <p><strong>Unique ID:</strong> {{ phone.unique_id }}</p>
+                      </v-col>
+                    </v-row>
+                    <p v-if="!selectedPlayer.phone_info.length">No phone information available</p>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+
+        <!-- Dialog Actions -->
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" text @click="detailDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Modal for Change Phone Number -->
+    <v-dialog v-model="changePhoneDialog" max-width="500px">
+      <v-card>
+        <v-card-title>
+          <span class="text-h5">Change Phone Number</span>
+        </v-card-title>
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <!-- Identifier (Disabled) -->
+              <v-col cols="12">
+                <v-text-field
+                  label="Identifier"
+                  v-model="phoneData.identifier"
+                  outlined
+                  dense
+                  disabled
+                ></v-text-field>
+              </v-col>
+
+              <!-- Select Phone ID -->
+              <v-col cols="12">
+                <v-select
+                label="Phone ID"
+                v-model="phoneData.phoneId"
+                :items="phoneOptions"
+                item-text="phone_number"
+                item-value="unique_id"
+                outlined
+                dense
+              ></v-select>
+              </v-col>
+
+              <!-- New Phone Number -->
+              <v-col cols="12">
+                <v-text-field
+                  label="New Phone Number"
+                  v-model="phoneData.newPhoneNumber"
+                  outlined
+                  dense
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="updatePhoneNumber">Save</v-btn>
+          <v-btn text @click="changePhoneDialog = false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
   </DashboardLayout>
 </template>
 
 <script>
 import DashboardLayout from "@/layouts/DashboardLayout.vue";
+import { showSuccessAlert, showErrorAlert, showConfirmDialog } from "@/utils/swalGlobal";
 import { ref, watch, onMounted } from "vue";
 import { api } from "@/utils/api";
 
@@ -111,6 +292,13 @@ export default {
     const loading = ref(false); // Loading state
     const options = ref({ page: 1, itemsPerPage: 10 }); // Pagination options
     const filters = ref({ param: "" }); // Filter options
+
+    const editDialog = ref(false);
+    const editData = ref({ identifier: "", firstname: "", lastname: "" });
+
+    const changePhoneDialog = ref(false);
+    const phoneData = ref({ identifier: null, newPhoneNumber: null, phoneId: null });
+    const phoneOptions = ref([]);
 
     const detailDialog = ref(false); // State untuk modal
     const selectedPlayer = ref({}); // Data pemain yang dipilih
@@ -126,8 +314,12 @@ export default {
         {title: "Bank", align: 'center', value: "accounts.bank"},
         {title: "R.O.C", align: 'center', value:"accounts.black_money"},
       ], sortable: false },
+      { title: "Phone No.", align: "center", value: "phone", sortable: false },
       { title: "Job", align: 'center', value: "job", sortable: false },
+      { title: "Actions", align: "center", value: "actions", sortable: false },
     ]);
+
+
 
     // Load players from API
     const loadPlayers = async () => {
@@ -159,9 +351,66 @@ export default {
       }
     };
 
-    // const PlayerImage = (players) => {
-    //   return ``
-    // }
+    const showChangePhoneDialog = (player) => {
+      phoneData.value.identifier = player.identifier;
+      phoneData.value.newPhoneNumber = "";
+      phoneData.value.phoneId = "";
+      phoneOptions.value = player.phone_info;
+      changePhoneDialog.value = true;
+    };
+
+    const updatePhoneNumber = async () => {
+      try {
+        const payload = {
+          identifier: phoneData.value.identifier,
+          newPhoneNumber: phoneData.value.newPhoneNumber,
+          phoneId: phoneData.value.phoneId,
+        };
+        const response = await api.post("/phonesettings/changephone", payload);
+
+        if (response.status === 200) {
+          showSuccessAlert("Success", "Phone number updated successfully");
+          changePhoneDialog.value = false;
+          loadPlayers();
+        }
+      } catch (error) {
+        showErrorAlert("Error", "Failed to update phone number");
+        console.error("Error updating phone number:", error);
+      }
+    };
+
+    const showEditDialog = (player) => {
+      editData.value = { ...player }; // Copy data player ke dialog
+      editDialog.value = true; // Buka dialog
+    };
+
+    const updatePlayerName = async () => {
+
+      try {
+        editDialog.value = false; // Tutup dialog terlebih dahulu
+        const confirm = await showConfirmDialog(
+          "Are you sure?",
+          "Do you want to update this player's name?"
+        );
+
+        if (!confirm) return; // Exit if user cancels
+        const payload = {
+          identifier: editData.value.identifier,
+          firstname: editData.value.firstname,
+          lastname: editData.value.lastname,
+        };
+        const response = await api.put("/users/changename", payload);
+        if (response.status === 200) {
+          console.log("Player name updated successfully:", response.data);
+          editDialog.value = false;
+          showSuccessAlert("Name Updated!", "Player name has been successfully updated.");
+          loadPlayers();
+        }
+      } catch (error) {
+        showErrorAlert("Failed to Update", "There was an error updating the player's name.");
+        console.error("Error updating player name:", error);
+      }
+    };
 
     const showPlayerDetail = (player) => {
       console.log(player)
@@ -206,7 +455,16 @@ export default {
       getBtnColor,
       detailDialog,
       selectedPlayer,
-      showPlayerDetail
+      showPlayerDetail,
+      editDialog,
+      editData,
+      showEditDialog,
+      updatePlayerName,
+      phoneData,
+      phoneOptions,
+      changePhoneDialog,
+      showChangePhoneDialog,
+      updatePhoneNumber,
     };
   },
 };

@@ -132,6 +132,7 @@
 
 <script>
 import DashboardLayout from '@/layouts/DashboardLayout.vue';
+import { showSuccessAlert, showErrorAlert, showConfirmDialog } from "@/utils/swalGlobal";
 import { ref, onMounted, watch } from 'vue';
 import { api } from '@/utils/api';
 
@@ -262,7 +263,7 @@ export default {
     const copyLink = (link) => {
       navigator.clipboard.writeText(link).then(
         () => {
-          console.log("Link copied to clipboard:", link);
+          showSuccessAlert("Success!", `Link copied to clipboard : ${link}`);
         },
         (err) => {
           console.error("Failed to copy link:", err);

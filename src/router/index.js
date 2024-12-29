@@ -33,6 +33,12 @@ const routes = [
     component: () => import('@/pages/Players/index.vue'),
     props: true,
   },
+  {
+    path: '/vehicle',
+    name: 'dashboard-Vehicle',
+    component: () => import('@/pages/Vehicles/index.vue'),
+    props: true,
+  },
 ];
 
 const router = createRouter({

@@ -8,3 +8,16 @@
 // @use 'vuetify/settings' with (
 //   $color-pack: false
 // );
+
+// $light: (
+//   primary: #1976D2,
+//   secondary: #424242
+// ) !default;
+
+// @use 'vuetify/settings' with (
+//   $light: $light
+// );
+
+.swal-overlay {
+    z-index: 2000 !important; // Pastikan z-index lebih tinggi dari dialog Vuetify
+  }

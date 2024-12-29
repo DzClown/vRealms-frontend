@@ -36,6 +36,14 @@ const menuItems = [
     to: { name: 'dashboard-Players' },
     icon: { icon: 'mdi-human-male-board' },
   },
+  {
+    heading: 'Vehicle',
+  },
+  {
+    title: 'Vehicle',
+    to: { name: 'dashboard-Vehicle' },
+    icon: { icon: 'mdi-car-estate' },
+  },
 ];
 
 export default menuItems;

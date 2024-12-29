@@ -54,6 +54,7 @@ export default defineConfig({
   css: {
     preprocessorOptions: {
       sass: {
+        // additionalData: `@use 'vuetify/settings' as *;`,
         api: 'modern-compiler',
       },
     },
