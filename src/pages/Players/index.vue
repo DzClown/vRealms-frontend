@@ -242,15 +242,16 @@
 
               <!-- Select Phone ID -->
               <v-col cols="12">
-                <v-select
-                label="Phone ID"
-                v-model="phoneData.phoneId"
-                :items="phoneOptions"
-                item-text="phone_number"
-                item-value="unique_id"
-                outlined
-                dense
-              ></v-select>
+                <v-combobox
+                  label="Phone ID"
+                  v-model="phoneData.phoneId"
+                  :items="phoneOptions"
+                  item-text="phone_number"
+                  item-value="unique_id"
+                  outlined
+                  dense
+                >
+                </v-combobox>
               </v-col>
 
               <!-- New Phone Number -->
@@ -298,7 +299,7 @@ export default {
 
     const changePhoneDialog = ref(false);
     const phoneData = ref({ identifier: null, newPhoneNumber: null, phoneId: null });
-    const phoneOptions = ref([]);
+    const phoneOptions = ref({});
 
     const detailDialog = ref(false); // State untuk modal
     const selectedPlayer = ref({}); // Data pemain yang dipilih
@@ -355,7 +356,14 @@ export default {
       phoneData.value.identifier = player.identifier;
       phoneData.value.newPhoneNumber = "";
       phoneData.value.phoneId = "";
-      phoneOptions.value = player.phone_info;
+
+      // Ubah phoneOptions menjadi array string untuk "title"
+      phoneOptions.value = player.phone_info.map(phone => ({
+        title: `${phone.phone_number} (${phone.unique_id})`, // Format string gabungan
+        value: phone.unique_id, // Pastikan ini string
+      }));
+
+      console.log("Phone Options Processed:", phoneOptions.value); // Debug hasil akhir
       changePhoneDialog.value = true;
     };
 
