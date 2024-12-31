@@ -372,16 +372,20 @@ export default {
         const payload = {
           identifier: phoneData.value.identifier,
           newPhoneNumber: phoneData.value.newPhoneNumber,
-          phoneId: phoneData.value.phoneId,
+          phoneId: phoneData.value.phoneId?.value || phoneData.value.phoneId, // Ambil value jika `phoneId` adalah objek
         };
-        const response = await api.post("/phonesettings/changephone", payload);
+        console.log("Payload to API:", JSON.stringify(payload));
+
+        const response = await api.put("/phonesettings/changephone", payload);
 
         if (response.status === 200) {
+          changePhoneDialog.value = false;
           showSuccessAlert("Success", "Phone number updated successfully");
           changePhoneDialog.value = false;
           loadPlayers();
         }
       } catch (error) {
+        changePhoneDialog.value = false;
         showErrorAlert("Error", "Failed to update phone number");
         console.error("Error updating phone number:", error);
       }
